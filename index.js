@@ -58,8 +58,21 @@ app.delete('/api/persons/:id', (request, response) => {
 app.post('/api/persons/', (request, response) => {
   const randomID = Math.floor(Math.random() * 10001) + 1;
 
-  const person = request.body;
-  person.id = randomID;
+  const body = request.body;
+
+  if (!body.name || !body.number) {
+    return response.status(400).json({
+      error: 'missing name or number',
+    });
+  }
+
+  const person = {
+    id: randomID,
+    name: body.name,
+    number: body.number,
+  };
+
+  phonebook = phonebook.concat(person);
 
   response.json(person);
 });
