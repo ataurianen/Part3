@@ -4,7 +4,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 
 const app = express();
-const Phonebook = require('./models/phonebook');
+const Person = require('./models/person');
 
 app.use(cors());
 app.use(express.json());
@@ -38,21 +38,21 @@ let phonebook = [
 ];
 
 app.get('/api/persons', (request, response) => {
-  Phonebook.find({}).then((persons) => {
+  Person.find({}).then((persons) => {
     response.json(persons);
   });
 });
 
 app.get('/info', (request, response) => {
-  Phonebook.countDocuments().then((countDocuments) => {
-    response.send(`<p>Phonebook has info for ${phonebook.length} people</p>
+  Person.countDocuments().then((countDocuments) => {
+    response.send(`<p>Phonebook has info for ${countDocuments} people</p>
     <br />
     ${new Date()}`);
   });
 });
 
 app.get('/api/persons/:id', (request, response) => {
-  const person = Phonebook.findById(request.params.id).then((person) => {
+  const person = Person.findById(request.params.id).then((person) => {
     response.json(person);
   });
 });
@@ -65,31 +65,16 @@ app.delete('/api/persons/:id', (request, response) => {
 });
 
 app.post('/api/persons/', (request, response) => {
-  const randomID = Math.floor(Math.random() * 10001) + 1;
+  const { name, number } = request.body;
 
-  const body = request.body;
+  const person = new Person({
+    name,
+    number,
+  });
 
-  if (!body.name || !body.number) {
-    return response.status(400).json({
-      error: 'missing name or number',
-    });
-  }
-
-  if (phonebook.find((person) => person.name === body.name)) {
-    return response.status(400).json({
-      error: 'The name is already in the phonebook',
-    });
-  }
-
-  const person = {
-    id: randomID,
-    name: body.name,
-    number: body.number,
-  };
-
-  phonebook = phonebook.concat(person);
-
-  response.json(person);
+  person.save().then(() => {
+    response.json(person);
+  });
 });
 
 const PORT = process.env.PORT;
