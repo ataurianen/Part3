@@ -19,7 +19,6 @@ app.use(express.static('dist'));
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' });
 };
-app.use(unknownEndpoint);
 
 const errorHandler = (error, request, response, next) => {
   console.log(error.message);
@@ -30,7 +29,6 @@ const errorHandler = (error, request, response, next) => {
 
   next(error);
 };
-app.use(errorHandler);
 
 app.get('/api/persons', (request, response) => {
   Person.find({}).then((persons) => {
@@ -46,7 +44,7 @@ app.get('/info', (request, response) => {
   });
 });
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
   const person = Person.findById(request.params.id)
     .then((person) => {
       if (person) {
@@ -58,7 +56,7 @@ app.get('/api/persons/:id', (request, response) => {
     .catch((error) => next(error));
 });
 
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response, next) => {
   const id = Number(request.params.id);
   const person = Person.findByIdAndDelete(request.params.id)
     .then((person) => {
@@ -67,7 +65,7 @@ app.delete('/api/persons/:id', (request, response) => {
     .catch((error) => next(error));
 });
 
-app.post('/api/persons/', (request, response) => {
+app.post('/api/persons/', (request, response, next) => {
   const { name, number } = request.body;
 
   const person = new Person({
@@ -82,6 +80,23 @@ app.post('/api/persons/', (request, response) => {
     })
     .catch((error) => next(error));
 });
+
+app.put('/api/persons/:id', (request, response, next) => {
+  const { name, number } = request.body;
+  const person = {
+    name,
+    number,
+  };
+
+  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+    .then((updatedPerson) => {
+      response.json(updatedPerson);
+    })
+    .catch((error) => next(error));
+});
+
+app.use(unknownEndpoint);
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
