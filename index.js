@@ -47,7 +47,7 @@ app.get('/info', (request, response) => {
 });
 
 app.get('/api/persons/:id', (request, response, next) => {
-  const person = Person.findById(request.params.id)
+  Person.findById(request.params.id)
     .then((person) => {
       if (person) {
         response.json(person);
